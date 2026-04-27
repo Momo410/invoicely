@@ -8,7 +8,10 @@ import posthog from "posthog-js";
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    posthog.init(env.NEXT_PUBLIC_POSTHOG_KEY!, {
+    if (!env.NEXT_PUBLIC_POSTHOG_KEY || !env.NEXT_PUBLIC_POSTHOG_HOST) {
+      return;
+    }
+    posthog.init(env.NEXT_PUBLIC_POSTHOG_KEY, {
       api_host: env.NEXT_PUBLIC_POSTHOG_HOST,
       ui_host: "https://us.posthog.com",
       capture_pageview: false, // We capture pageviews manually

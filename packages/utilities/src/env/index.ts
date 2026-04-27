@@ -1,23 +1,35 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
+/**
+ * Optional URL helper: empty strings should be treated as "not set"
+ * so we don't trip the URL validator in dev or preview environments
+ * that haven't fully wired up every integration yet.
+ */
+const optionalString = z
+  .string()
+  .optional()
+  .transform((v) => (v && v.length > 0 ? v : undefined));
+
 export const env = createEnv({
   server: {
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-    DATABASE_URL: z.string(),
-    GOOGLE_CLIENT_ID: z.string(),
-    GOOGLE_CLIENT_SECRET: z.string(),
-    CF_R2_ENDPOINT: z.string(),
-    CF_R2_ACCESS_KEY_ID: z.string(),
-    CF_R2_SECRET_ACCESS_KEY: z.string(),
-    CF_R2_BUCKET_NAME: z.string(),
-    CF_R2_PUBLIC_DOMAIN: z.string(),
+    // Required for full app functionality, but kept optional so the marketing
+    // pages can render even before integrations are connected.
+    DATABASE_URL: optionalString,
+    GOOGLE_CLIENT_ID: optionalString,
+    GOOGLE_CLIENT_SECRET: optionalString,
+    CF_R2_ENDPOINT: optionalString,
+    CF_R2_ACCESS_KEY_ID: optionalString,
+    CF_R2_SECRET_ACCESS_KEY: optionalString,
+    CF_R2_BUCKET_NAME: optionalString,
+    CF_R2_PUBLIC_DOMAIN: optionalString,
   },
   client: {
-    NEXT_PUBLIC_POSTHOG_HOST: z.string(),
-    NEXT_PUBLIC_POSTHOG_KEY: z.string(),
-    NEXT_PUBLIC_BASE_URL: z.string(),
-    NEXT_PUBLIC_TRPC_BASE_URL: z.string(),
+    NEXT_PUBLIC_POSTHOG_HOST: optionalString,
+    NEXT_PUBLIC_POSTHOG_KEY: optionalString,
+    NEXT_PUBLIC_BASE_URL: z.string().default("http://localhost:3000"),
+    NEXT_PUBLIC_TRPC_BASE_URL: z.string().default("http://localhost:3000/api/trpc"),
   },
   runtimeEnv: {
     // =========== SERVER ===========
@@ -36,5 +48,6 @@ export const env = createEnv({
     NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
     NEXT_PUBLIC_TRPC_BASE_URL: process.env.NEXT_PUBLIC_TRPC_BASE_URL,
   },
+  emptyStringAsUndefined: true,
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 });
